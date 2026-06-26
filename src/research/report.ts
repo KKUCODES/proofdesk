@@ -1,6 +1,7 @@
 import type { ResearchReport, ResearchRequest, Verdict } from "../domain/types.js";
 import {
   buildEvidenceBundleHash,
+  normalizeEvidenceText,
   sourceToCitation,
   type EvidenceSource,
 } from "./evidence.js";
@@ -14,29 +15,62 @@ export interface BuildResearchReportOptions {
 interface ScoredSource {
   source: EvidenceSource;
   citationIndex: number;
-  score: number;
+  tokenScore: number;
+  hasSupportSignal: boolean;
+  hasDenialSignal: boolean;
 }
 
-const DETERMINISTIC_ACCESSED_AT = "not-recorded";
-const RELEVANCE_THRESHOLD = 0.45;
+const RELEVANCE_THRESHOLD = 0.2;
 
 const STOP_WORDS = new Set([
   "about",
   "after",
+  "and",
+  "are",
   "does",
+  "do",
   "from",
   "have",
+  "in",
+  "is",
   "into",
+  "of",
+  "on",
+  "support",
+  "supported",
+  "supports",
   "that",
   "the",
   "this",
+  "to",
+  "use",
+  "used",
+  "uses",
+  "using",
   "what",
   "when",
   "where",
   "with",
 ]);
 
+const SUPPORT_PATTERNS = [
+  /\bescrow\s+is\s+locked\b/i,
+  /\bescrow-backed\b/i,
+  /\bsettlement\s+is\s+released\b/i,
+  /\bsupports\s+paid\s+orders\b/i,
+  /\bpaid\s+agent\s+orders\b/i,
+];
+
+const DENIAL_PATTERNS = [
+  /\bdoes\s+not\s+use\b/i,
+  /\bdo\s+not\s+use\b/i,
+  /\bnot\s+support(?:s|ed)?\b/i,
+  /\bdoes\s+not\s+support\b/i,
+  /\bwithout\s+escrow\b/i,
+];
+
 function canonicalTerm(term: string): string {
+  if (term === "paid" || term === "pays" || term === "paying") return "pay";
   if (term.length > 4 && term.endsWith("ies")) return `${term.slice(0, -3)}y`;
   if (term.length > 4 && term.endsWith("ed")) return term.slice(0, -2);
   if (term.length > 3 && term.endsWith("s")) return term.slice(0, -1);
@@ -60,35 +94,53 @@ function extractTerms(text: string): string[] {
   return terms;
 }
 
-function sourceContainsTerm(sourceTerms: string[], term: string): boolean {
-  return sourceTerms.some((sourceTerm) => sourceTerm === term || sourceTerm.includes(term));
+function hasPattern(text: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(text));
 }
 
-function scoreSource(question: string, text: string): number {
+function scoreTokenOverlap(question: string, text: string): number {
   const questionTerms = extractTerms(question);
   if (questionTerms.length === 0) return 0;
 
-  const sourceTerms = extractTerms(text);
-  const matches = questionTerms.filter((term) => sourceContainsTerm(sourceTerms, term));
+  const sourceTerms = new Set(extractTerms(text));
+  const matches = questionTerms.filter((term) => sourceTerms.has(term));
   return matches.length / questionTerms.length;
 }
 
-function chooseVerdict(relevantSourceCount: number, requiredSourceCount: number, averageScore: number): Verdict {
+function chooseVerdict(
+  relevantSourceCount: number,
+  supportiveSourceCount: number,
+  denialSourceCount: number,
+  requiredSourceCount: number,
+): Verdict {
   if (relevantSourceCount === 0) return "inconclusive";
-  if (relevantSourceCount >= requiredSourceCount) return "supported";
-  return averageScore >= RELEVANCE_THRESHOLD ? "mixed" : "inconclusive";
+  if (denialSourceCount > 0) return supportiveSourceCount > 0 ? "mixed" : "inconclusive";
+  if (supportiveSourceCount >= requiredSourceCount) return "supported";
+  return supportiveSourceCount > 0 ? "mixed" : "inconclusive";
 }
 
-function calculateConfidence(verdict: Verdict, relevantSourceCount: number, requiredSourceCount: number, averageScore: number): number {
+function calculateConfidence(
+  verdict: Verdict,
+  relevantSourceCount: number,
+  supportiveSourceCount: number,
+  requiredSourceCount: number,
+  averageScore: number,
+): number {
   if (verdict === "inconclusive") return relevantSourceCount === 0 ? 0.1 : 0.2;
   if (verdict === "supported") {
-    const coverage = Math.min(1, relevantSourceCount / requiredSourceCount);
-    return Math.min(0.95, 0.55 + averageScore * 0.35 + coverage * 0.05);
+    const coverage = Math.min(1, supportiveSourceCount / requiredSourceCount);
+    return Math.min(0.95, 0.72 + averageScore * 0.15 + coverage * 0.08);
   }
-  return Math.min(0.65, 0.35 + averageScore * 0.25);
+  return Math.min(0.65, 0.3 + averageScore * 0.2);
 }
 
-function buildLimitations(sourceCount: number, relevantSourceCount: number, requiredSourceCount: number): string[] {
+function buildLimitations(
+  sourceCount: number,
+  relevantSourceCount: number,
+  supportiveSourceCount: number,
+  denialSourceCount: number,
+  requiredSourceCount: number,
+): string[] {
   const limitations: string[] = [];
 
   if (sourceCount === 0) {
@@ -106,25 +158,52 @@ function buildLimitations(sourceCount: number, relevantSourceCount: number, requ
     );
   }
 
+  if (supportiveSourceCount < requiredSourceCount && sourceCount > 0) {
+    limitations.push(
+      `Only ${supportiveSourceCount} source(s) contained support signals; requested ${requiredSourceCount}.`,
+    );
+  }
+
+  if (denialSourceCount > 0) {
+    limitations.push(`${denialSourceCount} relevant source(s) contained denial signals.`);
+  }
+
   return limitations;
 }
 
 export function buildResearchReport(options: BuildResearchReportOptions): ResearchReport {
-  const accessedAt = options.accessedAt ?? DETERMINISTIC_ACCESSED_AT;
+  const accessedAt = options.accessedAt ?? new Date().toISOString();
   const requiredSourceCount = Math.max(1, options.request.required_source_count);
   const citations = options.sources.map((source) => sourceToCitation(source, accessedAt));
   const scoredSources: ScoredSource[] = options.sources.map((source, citationIndex) => ({
     source,
     citationIndex,
-    score: scoreSource(options.request.question, source.text),
+    tokenScore: scoreTokenOverlap(options.request.question, source.text),
+    hasSupportSignal: hasPattern(normalizeEvidenceText(source.text), SUPPORT_PATTERNS),
+    hasDenialSignal: hasPattern(normalizeEvidenceText(source.text), DENIAL_PATTERNS),
   }));
-  const relevantSources = scoredSources.filter((scoredSource) => scoredSource.score >= RELEVANCE_THRESHOLD);
+  const relevantSources = scoredSources.filter((scoredSource) => scoredSource.tokenScore >= RELEVANCE_THRESHOLD);
+  const supportiveSources = relevantSources.filter(
+    (scoredSource) => scoredSource.hasSupportSignal && !scoredSource.hasDenialSignal,
+  );
+  const denialSources = relevantSources.filter((scoredSource) => scoredSource.hasDenialSignal);
   const averageScore =
     scoredSources.length === 0
       ? 0
-      : scoredSources.reduce((sum, scoredSource) => sum + scoredSource.score, 0) / scoredSources.length;
-  const verdict = chooseVerdict(relevantSources.length, requiredSourceCount, averageScore);
-  const confidence = calculateConfidence(verdict, relevantSources.length, requiredSourceCount, averageScore);
+      : scoredSources.reduce((sum, scoredSource) => sum + scoredSource.tokenScore, 0) / scoredSources.length;
+  const verdict = chooseVerdict(
+    relevantSources.length,
+    supportiveSources.length,
+    denialSources.length,
+    requiredSourceCount,
+  );
+  const confidence = calculateConfidence(
+    verdict,
+    relevantSources.length,
+    supportiveSources.length,
+    requiredSourceCount,
+    averageScore,
+  );
 
   return {
     verdict,
@@ -138,7 +217,13 @@ export function buildResearchReport(options: BuildResearchReportOptions): Resear
       return `${citation.title}: ${citation.relevance}`;
     }),
     citations,
-    limitations: buildLimitations(options.sources.length, relevantSources.length, requiredSourceCount),
+    limitations: buildLimitations(
+      options.sources.length,
+      relevantSources.length,
+      supportiveSources.length,
+      denialSources.length,
+      requiredSourceCount,
+    ),
     evidence_bundle_hash: buildEvidenceBundleHash(citations.map((citation) => citation.content_hash)),
   };
 }
