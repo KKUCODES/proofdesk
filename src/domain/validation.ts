@@ -81,6 +81,10 @@ export function parseVerificationRequest(input: unknown): VerificationRequest {
     throw new Error("Expected verification request object");
   }
 
+  if (!Object.hasOwn(input, "report")) {
+    throw new Error("Expected required field: report");
+  }
+
   const strictness = input.strictness ?? "medium";
   if (!verificationStrictnesses.includes(strictness as VerificationStrictness)) {
     throw new Error("Expected strictness to be low, medium, or high");

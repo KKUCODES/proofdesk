@@ -66,6 +66,10 @@ describe("domain validation", () => {
     expect(parsed.strictness).toBe("medium");
   });
 
+  it("rejects a verification request without a report", () => {
+    expect(() => parseVerificationRequest({ strictness: "medium" })).toThrow("report");
+  });
+
   it("rejects invalid verification strictness", () => {
     expect(() =>
       parseVerificationRequest({
