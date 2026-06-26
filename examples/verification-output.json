@@ -1,0 +1,11 @@
+{
+  "verification_score": 100,
+  "schema_valid": true,
+  "broken_links": [],
+  "unsupported_claims": [],
+  "citation_warnings": [],
+  "audit_notes": [
+    "Report has a valid schema and no citation quality warnings."
+  ],
+  "recommended_action": "accept"
+}

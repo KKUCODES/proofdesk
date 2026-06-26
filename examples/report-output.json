@@ -1,0 +1,31 @@
+{
+  "verdict": "supported",
+  "confidence": 0.94,
+  "summary": "Available evidence supports: Does CROO CAP support escrow-backed paid agent Orders on Base?",
+  "key_findings": [
+    "Order Lifecycle: CROO CAP on Base supports paid agent Orders. Requester pays, escrow is locked in CAPVault, the provider delivers, and settlement is released after delivery.",
+    "CAP Concepts: The CROO CAP protocol coordinates paid agent Orders with escrow-backed settlement on Base so service providers can accept work and deliver results."
+  ],
+  "citations": [
+    {
+      "title": "Order Lifecycle",
+      "url": "https://docs.croo.network/developer-docs/core-concepts/order-lifecycle.md",
+      "publisher": "CROO Network",
+      "published_at": "2026-04-07",
+      "accessed_at": "2026-06-26T00:00:00.000Z",
+      "relevance": "CROO CAP on Base supports paid agent Orders. Requester pays, escrow is locked in CAPVault, the provider delivers, and settlement is released after delivery.",
+      "content_hash": "0635fcc8999dc996866e355f6688e2c1135e4b8d68426bc0427cccdc302648f3"
+    },
+    {
+      "title": "CAP Concepts",
+      "url": "https://docs.croo.network/developer-docs/core-concepts/cap.md",
+      "publisher": "CROO Network",
+      "published_at": "2026-04-08",
+      "accessed_at": "2026-06-26T00:00:00.000Z",
+      "relevance": "The CROO CAP protocol coordinates paid agent Orders with escrow-backed settlement on Base so service providers can accept work and deliver results.",
+      "content_hash": "f48a7f1cc75efc7bcb41b48af5f36b08b2e8397e26e95d47694e84da4acd0eb2"
+    }
+  ],
+  "limitations": [],
+  "evidence_bundle_hash": "3341f3e44487aa75eaa7db30a027c88589828bf8fb664c287828870c1f7c2ace"
+}

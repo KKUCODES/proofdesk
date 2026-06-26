@@ -1,0 +1,11 @@
+{
+  "question": "Does CROO CAP support escrow-backed paid agent Orders on Base?",
+  "domain": "croo",
+  "required_source_count": 2,
+  "freshness_days": 90,
+  "output_style": "concise",
+  "source_urls": [
+    "https://docs.croo.network/developer-docs/core-concepts/order-lifecycle.md",
+    "https://docs.croo.network/developer-docs/core-concepts/cap.md"
+  ]
+}
