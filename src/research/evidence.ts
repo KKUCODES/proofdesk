@@ -22,14 +22,38 @@ export function buildEvidenceBundleHash(contentHashes: string[]): string {
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
 
+function normalizeSourceUrl(url: string): string {
+  const trimmedUrl = url.trim();
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(trimmedUrl);
+  } catch {
+    throw new Error("Invalid evidence source url");
+  }
+
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new Error("Invalid evidence source url protocol");
+  }
+
+  return trimmedUrl;
+}
+
 export function sourceToCitation(source: EvidenceSource, accessedAt = new Date().toISOString()): Citation {
+  const url = normalizeSourceUrl(source.url);
+  const text = normalizeEvidenceText(source.text);
+
+  if (text.length === 0) {
+    throw new Error("Evidence source text must not be empty");
+  }
+
   return {
-    title: source.title,
-    url: source.url,
-    publisher: source.publisher,
-    published_at: source.published_at,
+    title: source.title.trim() || "Untitled source",
+    url,
+    publisher: source.publisher.trim() || "Unknown publisher",
+    published_at: source.published_at.trim(),
     accessed_at: accessedAt,
-    relevance: normalizeEvidenceText(source.text).slice(0, 240),
-    content_hash: hashEvidenceContent(source.text),
+    relevance: text.slice(0, 240),
+    content_hash: hashEvidenceContent(text),
   };
 }
