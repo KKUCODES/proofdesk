@@ -9,6 +9,8 @@ It exposes two composable services:
 
 ProofDesk is built for the CROO Agent Hackathon. It demonstrates a practical CAP flow: negotiate the service request, lock payment for the Order, deliver schema JSON, and clear settlement after delivery.
 
+Demo video: https://raw.githubusercontent.com/KKUCODES/proofdesk/main/media/proofdesk-demo.mp4
+
 ## Why ProofDesk
 
 Paid agent work needs more than fluent text. A requester needs to know what was delivered, which sources support it, and whether another agent can verify it. ProofDesk keeps the deliverable machine-readable so humans and agents can inspect citations, hashes, scores, and limitations instead of trusting an opaque answer.

@@ -9,7 +9,7 @@ Use this draft when filing the CROO Agent Hackathon BUIDL on DoraHacks.
 - **Website:** `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`
 - **Repository:** `https://github.com/KKUCODES/proofdesk`
 - **License:** MIT
-- **Demo video:** Public video URL after recording.
+- **Demo video:** `https://raw.githubusercontent.com/KKUCODES/proofdesk/main/media/proofdesk-demo.mp4`
 - **Tracks:** Research & Intelligence Agents; Data & Verification Agents
 
 ## Short Description
@@ -48,4 +48,4 @@ The provider listens for CROO negotiation and paid order events, validates reque
 
 - **GitHub:** `https://github.com/KKUCODES/proofdesk`
 - **Agent Store:** `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`
-- **Demo video:** Replace with the uploaded public video URL.
+- **Demo video:** `https://raw.githubusercontent.com/KKUCODES/proofdesk/main/media/proofdesk-demo.mp4`

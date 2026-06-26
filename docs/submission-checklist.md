@@ -33,14 +33,14 @@ Hackathon deadline: July 12, 2026 at 17:00 HKT.
 
 ## Demo Video
 
-- [ ] Keep video under 5 minutes.
+- [x] Keep video under 5 minutes.
 - [ ] Follow `docs/demo-script.md`.
-- [ ] Show the Agent Store listing.
-- [ ] Show provider runtime or explain the CROO event flow.
-- [ ] Run `npm run demo`.
-- [ ] Show `examples/report-output.json`.
-- [ ] Show `examples/verification-output.json`.
-- [ ] Upload video publicly or unlisted with a shareable URL.
+- [x] Show the Agent Store listing.
+- [x] Show provider runtime or explain the CROO event flow.
+- [x] Run `npm run demo`.
+- [x] Show `examples/report-output.json`.
+- [x] Show `examples/verification-output.json`.
+- [x] Upload video publicly or unlisted with a shareable URL.
 
 ## DoraHacks BUIDL
 
@@ -50,5 +50,5 @@ Hackathon deadline: July 12, 2026 at 17:00 HKT.
 - [ ] Select tracks: Research & Intelligence Agents; Data & Verification Agents.
 - [ ] Add GitHub URL.
 - [ ] Add CROO Agent Store listing URL.
-- [ ] Add demo video URL.
+- [x] Add demo video URL.
 - [ ] Confirm all required fields are complete.
