@@ -1,0 +1,27 @@
+{
+  "name": "proofdesk",
+  "version": "0.1.0",
+  "description": "CROO Agent Store provider for source-grounded research and evidence verification.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "tsx src/cli/demo.ts",
+    "provider": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@croo-network/sdk": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
