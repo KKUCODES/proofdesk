@@ -6,6 +6,7 @@ import type {
   VerificationStrictness,
 } from "../domain/types.js";
 import { isResearchReport } from "../domain/validation.js";
+import { buildEvidenceBundleHash } from "../research/evidence.js";
 
 const HASH_PATTERN = /^[a-f0-9]{64}$/i;
 const WEAK_RELEVANCE_LENGTH = 20;
@@ -26,7 +27,7 @@ function collectCitationWarnings(citations: Citation[]): string[] {
   citations.forEach((citation, index) => {
     const label = `Citation ${index + 1}`;
 
-    if (!citation.url.trim().startsWith("https://")) {
+    if (!isHttpsUrl(citation.url)) {
       warnings.push(`${label} does not use an https URL.`);
     }
 
@@ -40,6 +41,30 @@ function collectCitationWarnings(citations: Citation[]): string[] {
   });
 
   return warnings;
+}
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function collectBundleHashWarnings(evidenceBundleHash: string, citations: Citation[]): string[] {
+  if (!isValidHash(evidenceBundleHash)) {
+    return ["Evidence bundle hash is missing or invalid."];
+  }
+
+  const expectedBundleHash = buildEvidenceBundleHash(
+    citations.map((citation) => citation.content_hash),
+  );
+
+  if (evidenceBundleHash !== expectedBundleHash) {
+    return ["Evidence bundle hash does not match citation content hashes."];
+  }
+
+  return [];
 }
 
 function collectUnsupportedClaims(report: {
@@ -60,8 +85,16 @@ function collectUnsupportedClaims(report: {
   return unsupportedClaims;
 }
 
-function chooseAction(score: number, unsupportedClaimCount: number): RecommendedAction {
+function chooseAction(
+  score: number,
+  unsupportedClaimCount: number,
+  warningCount: number,
+): RecommendedAction {
   if (unsupportedClaimCount > 0) {
+    return score >= 40 ? "revise" : "reject";
+  }
+
+  if (warningCount > 0) {
     return score >= 40 ? "revise" : "reject";
   }
 
@@ -89,9 +122,7 @@ export function verifyResearchReport(request: VerificationRequest): Verification
   const auditNotes: string[] = [];
   const penalty = strictnessPenalty(request.strictness);
 
-  if (!isValidHash(report.evidence_bundle_hash)) {
-    citationWarnings.push("Evidence bundle hash is missing or invalid.");
-  }
+  citationWarnings.push(...collectBundleHashWarnings(report.evidence_bundle_hash, report.citations));
 
   let score = 100;
   score -= citationWarnings.length * penalty;
@@ -112,6 +143,6 @@ export function verifyResearchReport(request: VerificationRequest): Verification
     unsupported_claims: unsupportedClaims,
     citation_warnings: citationWarnings,
     audit_notes: auditNotes,
-    recommended_action: chooseAction(score, unsupportedClaims.length),
+    recommended_action: chooseAction(score, unsupportedClaims.length, citationWarnings.length),
   };
 }

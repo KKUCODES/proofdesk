@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { buildEvidenceBundleHash } from "../src/research/evidence.js";
 import { verifyResearchReport } from "../src/verification/verifier.js";
+
+const validContentHash = "a".repeat(64);
 
 const validReport = {
   verdict: "supported",
@@ -14,11 +17,11 @@ const validReport = {
       published_at: "2026-04-07",
       accessed_at: "2026-06-26T00:00:00.000Z",
       relevance: "Escrow is locked in CAPVault and settlement is released after delivery.",
-      content_hash: "a".repeat(64),
+      content_hash: validContentHash,
     },
   ],
   limitations: [],
-  evidence_bundle_hash: "b".repeat(64),
+  evidence_bundle_hash: buildEvidenceBundleHash([validContentHash]),
 };
 
 describe("verification engine", () => {
@@ -58,15 +61,17 @@ describe("verification engine", () => {
   });
 
   it("warns about weak citation quality without checking links over HTTP", () => {
+    const invalidContentHash = "not-a-sha256";
     const result = verifyResearchReport({
       report: {
         ...validReport,
+        evidence_bundle_hash: buildEvidenceBundleHash([invalidContentHash]),
         citations: [
           {
             ...validReport.citations[0],
             url: "http://example.com/source",
             relevance: "Too short.",
-            content_hash: "not-a-sha256",
+            content_hash: invalidContentHash,
           },
         ],
       },
@@ -98,5 +103,60 @@ describe("verification engine", () => {
     const high = verifyResearchReport({ report: weakReport, strictness: "high" });
 
     expect(high.verification_score).toBeLessThan(low.verification_score);
+  });
+
+  it("does not accept reports with a mismatched evidence bundle hash", () => {
+    const result = verifyResearchReport({
+      report: { ...validReport, evidence_bundle_hash: "b".repeat(64) },
+      strictness: "medium",
+    });
+
+    expect(result.citation_warnings).toContain(
+      "Evidence bundle hash does not match citation content hashes.",
+    );
+    expect(result.recommended_action).not.toBe("accept");
+  });
+
+  it("does not accept reports with an invalid evidence bundle hash", () => {
+    const result = verifyResearchReport({
+      report: { ...validReport, evidence_bundle_hash: "not-a-sha256" },
+      strictness: "medium",
+    });
+
+    expect(result.citation_warnings).toContain("Evidence bundle hash is missing or invalid.");
+    expect(result.recommended_action).not.toBe("accept");
+  });
+
+  it("does not accept low strictness reports that still have citation warnings", () => {
+    const result = verifyResearchReport({
+      report: {
+        ...validReport,
+        citations: [
+          {
+            ...validReport.citations[0],
+            url: "http://example.com/source",
+            relevance: "Too short.",
+          },
+        ],
+      },
+      strictness: "low",
+    });
+
+    expect(result.citation_warnings.length).toBeGreaterThanOrEqual(2);
+    expect(result.verification_score).toBeGreaterThanOrEqual(80);
+    expect(result.recommended_action).not.toBe("accept");
+  });
+
+  it("penalizes reports with limitations", () => {
+    const clean = verifyResearchReport({ report: validReport, strictness: "medium" });
+    const limited = verifyResearchReport({
+      report: {
+        ...validReport,
+        limitations: ["Only one source was available."],
+      },
+      strictness: "medium",
+    });
+
+    expect(limited.verification_score).toBeLessThan(clean.verification_score);
   });
 });
