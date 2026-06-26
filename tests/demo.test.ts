@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { runLocalDemo } from "../src/cli/demo.js";
+import { isDirectCliInvocation, runLocalDemo } from "../src/cli/demo.js";
 import { buildEvidenceBundleHash } from "../src/research/evidence.js";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,5 +42,10 @@ describe("local demo runner", () => {
         "https://docs.croo.network/developer-docs/core-concepts/cap.md",
       ],
     });
+  });
+
+  it("recognizes the tsx demo script as a direct CLI invocation", () => {
+    expect(isDirectCliInvocation(["node", "src/cli/demo.ts"])).toBe(true);
+    expect(isDirectCliInvocation(["node", "node_modules/vitest/vitest.mjs"])).toBe(false);
   });
 });

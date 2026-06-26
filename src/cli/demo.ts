@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { pathToFileURL, fileURLToPath } from "node:url";
+import { fileURLToPath } from "node:url";
 import type { ResearchReport, VerificationResult } from "../domain/types.js";
 import { parseResearchRequest, parseVerificationRequest } from "../domain/validation.js";
 import { buildResearchReport } from "../research/report.js";
@@ -55,6 +55,24 @@ function toPrettyJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+export function isDirectCliInvocation(
+  argv = process.argv,
+  moduleUrl = import.meta.url,
+): boolean {
+  const modulePath = fileURLToPath(moduleUrl);
+  const sourceEntrypoint = resolve(projectRootFromModule(), "src", "cli", "demo.ts");
+  const builtEntrypoint = resolve(projectRootFromModule(), "dist", "src", "cli", "demo.js");
+
+  return argv.slice(1).some((arg) => {
+    const candidate = resolve(arg);
+    return (
+      candidate === modulePath ||
+      candidate === sourceEntrypoint ||
+      candidate === builtEntrypoint
+    );
+  });
+}
+
 export function runLocalDemo(): LocalDemoResult {
   const request = parseResearchRequest(demoResearchInput);
   const report = buildResearchReport({
@@ -90,7 +108,7 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(result, null, 2));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isDirectCliInvocation()) {
   main().catch((error: unknown) => {
     console.error(error);
     process.exitCode = 1;
