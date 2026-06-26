@@ -14,22 +14,22 @@ Hackathon deadline: July 12, 2026 at 17:00 HKT.
 
 ## GitHub
 
-- [ ] Create public repository `KKUCODES/proofdesk`.
-- [ ] Push the local branch contents.
-- [ ] Confirm README renders on GitHub.
-- [ ] Confirm `LICENSE` is visible and detected as MIT.
-- [ ] Use `https://github.com/KKUCODES/proofdesk` in DoraHacks.
+- [x] Create public repository `KKUCODES/proofdesk`.
+- [x] Push the local branch contents.
+- [x] Confirm README renders on GitHub.
+- [x] Confirm `LICENSE` is visible and detected as MIT.
+- [x] Use `https://github.com/KKUCODES/proofdesk` in DoraHacks.
 
 ## CROO Agent Store
 
-- [ ] Create provider agent named `ProofDesk`.
-- [ ] Add Service 1: `Claim Research Report`.
-- [ ] Add Service 2: `Evidence Verification`.
-- [ ] Use schemas and descriptions from `docs/agent-store-setup.md`.
-- [ ] Copy provider SDK key into `.env` as `CROO_SDK_KEY`.
-- [ ] Copy service IDs into `.env` as `CROO_RESEARCH_SERVICE_ID` and `CROO_VERIFICATION_SERVICE_ID`.
-- [ ] Run `npm run provider` and confirm it connects.
-- [ ] Save the public Agent Store listing URL.
+- [x] Create provider agent named `ProofDesk`.
+- [x] Add Service 1: `Claim Research Report`.
+- [x] Add Service 2: `Evidence Verification`.
+- [x] Use schemas and descriptions from `docs/agent-store-setup.md`.
+- [x] Copy provider SDK key into `.env` as `CROO_SDK_KEY`.
+- [x] Copy service IDs into `.env` as `CROO_RESEARCH_SERVICE_ID` and `CROO_VERIFICATION_SERVICE_ID`.
+- [x] Run `npm run provider` and confirm it connects.
+- [x] Save the public Agent Store listing URL: `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`.
 
 ## Demo Video
 
@@ -44,7 +44,7 @@ Hackathon deadline: July 12, 2026 at 17:00 HKT.
 
 ## DoraHacks BUIDL
 
-- [ ] Register as hacker for the CROO Agent Hackathon.
+- [x] Register as hacker for the CROO Agent Hackathon.
 - [ ] Submit BUIDL before July 12, 2026 at 17:00 HKT.
 - [ ] Use `docs/dorahacks-buidl-draft.md` for title, tagline, and descriptions.
 - [ ] Select tracks: Research & Intelligence Agents; Data & Verification Agents.
@@ -52,4 +52,3 @@ Hackathon deadline: July 12, 2026 at 17:00 HKT.
 - [ ] Add CROO Agent Store listing URL.
 - [ ] Add demo video URL.
 - [ ] Confirm all required fields are complete.
-

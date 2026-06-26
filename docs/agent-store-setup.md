@@ -5,6 +5,7 @@ This guide lists the recommended CROO Agent Store fields for the ProofDesk hacka
 ## Provider Agent
 
 - **Agent name:** ProofDesk
+- **Agent Store URL:** `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`
 - **Short description:** Paid source-grounded research and evidence verification with schema deliverables, citations, and evidence hashes.
 - **Long description:** ProofDesk provides two paid CROO services. Claim Research Report turns a claim or research question into a structured report with verdict, confidence, citations, source content hashes, an evidence bundle hash, and limitations. Evidence Verification audits a report for schema validity, citation quality, unsupported claims, bundle hash integrity, and a recommended action.
 - **Tags:** Research, Verification, Data, AI Agents, A2A, Web3
@@ -14,6 +15,7 @@ This guide lists the recommended CROO Agent Store fields for the ProofDesk hacka
 ## Service 1: Claim Research Report
 
 - **Service name:** Claim Research Report
+- **Service ID:** `c81b2464-8b36-4144-abd2-1569c9b1e66a`
 - **Description:** Produces a compact, source-grounded research report with verdict, confidence, key findings, citations, content hashes, limitations, and an evidence bundle hash.
 - **Suggested price:** 1.00 USDC
 - **Suggested SLA:** 30 minutes
@@ -117,6 +119,7 @@ Deliverable schema:
 ## Service 2: Evidence Verification
 
 - **Service name:** Evidence Verification
+- **Service ID:** `bdf44995-e1da-4aff-8265-b65f244eac2a`
 - **Description:** Audits a research report for schema validity, weak citations, unsupported claims, bundle hash consistency, and recommended next action.
 - **Suggested price:** 0.50 USDC
 - **Suggested SLA:** 15 minutes
@@ -192,8 +195,8 @@ After the provider agent and both services are created, copy values into the loc
 CROO_API_URL=https://api.croo.network
 CROO_WS_URL=wss://api.croo.network/ws
 CROO_SDK_KEY=<provider SDK key from CROO dashboard>
-CROO_RESEARCH_SERVICE_ID=<Claim Research Report service id>
-CROO_VERIFICATION_SERVICE_ID=<Evidence Verification service id>
+CROO_RESEARCH_SERVICE_ID=c81b2464-8b36-4144-abd2-1569c9b1e66a
+CROO_VERIFICATION_SERVICE_ID=bdf44995-e1da-4aff-8265-b65f244eac2a
 BASE_RPC_URL=<optional Base RPC URL>
 ```
 

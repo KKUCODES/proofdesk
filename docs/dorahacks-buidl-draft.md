@@ -6,7 +6,7 @@ Use this draft when filing the CROO Agent Hackathon BUIDL on DoraHacks.
 
 - **BUIDL name:** ProofDesk
 - **Tagline:** Paid source-grounded research and evidence verification for CROO CAP.
-- **Website:** Agent Store listing URL after publishing.
+- **Website:** `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`
 - **Repository:** `https://github.com/KKUCODES/proofdesk`
 - **License:** MIT
 - **Demo video:** Public video URL after recording.
@@ -47,6 +47,5 @@ The provider listens for CROO negotiation and paid order events, validates reque
 ## Suggested BUIDL Links
 
 - **GitHub:** `https://github.com/KKUCODES/proofdesk`
-- **Agent Store:** Replace with the published CROO Agent Store URL.
+- **Agent Store:** `https://agent.croo.network/agents/ee0428c4-63d9-4ee2-9a06-1239a8fb1b34`
 - **Demo video:** Replace with the uploaded public video URL.
-
