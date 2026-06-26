@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CrooProviderAdapter } from "../src/croo/sdkAdapter.js";
 import { CROO_PROVIDER_EVENTS, runProvider } from "../src/provider/runProvider.js";
 
@@ -43,6 +43,10 @@ const logger = {
 };
 
 describe("provider runtime", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("registers exact CROO event names", async () => {
     const { adapter, handlers } = createAdapter();
 
@@ -94,6 +98,63 @@ describe("provider runtime", () => {
       expect.stringContaining("Unsupported service id"),
     );
     expect(adapter.acceptNegotiation).not.toHaveBeenCalled();
+  });
+
+  it("accepts supported negotiations with valid payloads", async () => {
+    const { adapter, handlers } = createAdapter();
+    await runProvider({ adapter, config, logger });
+
+    await handlers.get(CROO_PROVIDER_EVENTS.negotiationCreated)?.({
+      negotiation_id: "negotiation_valid",
+    });
+
+    expect(adapter.getNegotiation).toHaveBeenCalledWith("negotiation_valid");
+    expect(adapter.acceptNegotiation).toHaveBeenCalledWith("negotiation_valid");
+    expect(adapter.rejectNegotiation).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed supported negotiations before accepting", async () => {
+    const { adapter, handlers } = createAdapter({
+      getNegotiation: vi.fn(async () => ({
+        serviceId: "svc_research",
+        requirements: "{bad json",
+      })),
+    });
+    await runProvider({ adapter, config, logger });
+
+    await handlers.get(CROO_PROVIDER_EVENTS.negotiationCreated)?.({
+      id: "negotiation_bad_payload",
+    });
+
+    expect(adapter.rejectNegotiation).toHaveBeenCalledWith(
+      "negotiation_bad_payload",
+      expect.any(String),
+    );
+    expect(adapter.acceptNegotiation).not.toHaveBeenCalled();
+  });
+
+  it("logs accept failures without rejecting an otherwise valid negotiation", async () => {
+    const localLogger = {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
+    const { adapter, handlers } = createAdapter({
+      acceptNegotiation: vi.fn(async () => {
+        throw new Error("temporary CROO accept failure");
+      }),
+    });
+    await runProvider({ adapter, config, logger: localLogger });
+
+    await handlers.get(CROO_PROVIDER_EVENTS.negotiationCreated)?.({
+      negotiationId: "negotiation_accept_failure",
+    });
+
+    expect(adapter.acceptNegotiation).toHaveBeenCalledWith("negotiation_accept_failure");
+    expect(adapter.rejectNegotiation).not.toHaveBeenCalled();
+    expect(localLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to handle CROO order_negotiation_created event"),
+      expect.any(Error),
+    );
   });
 
   it("logs malformed paid payloads and does not deliver", async () => {

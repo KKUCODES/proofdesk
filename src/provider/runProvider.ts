@@ -5,6 +5,7 @@ import {
   type CrooProviderEvent,
   type CrooProviderEventHandler,
 } from "../croo/sdkAdapter.js";
+import { parseResearchRequest, parseVerificationRequest } from "../domain/validation.js";
 import type { EvidenceSource } from "../research/evidence.js";
 import { handleServiceRequest, resolveServiceKind } from "../services/router.js";
 
@@ -72,6 +73,22 @@ function readPayloadFromNegotiation(negotiation: unknown): unknown {
   return payload;
 }
 
+function validateNegotiationPayload(
+  serviceId: string,
+  negotiation: unknown,
+  config: ProviderConfig,
+): void {
+  const serviceKind = resolveServiceKind(serviceId, config);
+  const payload = readPayloadFromNegotiation(negotiation);
+
+  if (serviceKind === "research") {
+    parseResearchRequest(payload);
+    return;
+  }
+
+  parseVerificationRequest(payload);
+}
+
 function wrapEventHandler(
   eventName: string,
   logger: ProviderLogger,
@@ -101,17 +118,20 @@ async function handleNegotiationCreated(
   const negotiation = await adapter.getNegotiation(negotiationId);
   const serviceId = readStringField(negotiation, ["serviceId", "service_id"]);
 
-  try {
-    if (serviceId === undefined) {
-      throw new Error("Negotiation service id is missing");
-    }
+  if (serviceId === undefined) {
+    await adapter.rejectNegotiation(negotiationId, "Negotiation service id is missing");
+    return;
+  }
 
-    resolveServiceKind(serviceId, config);
-    await adapter.acceptNegotiation(negotiationId);
-    logger.info(`Accepted CROO negotiation ${negotiationId} for service ${serviceId}`);
+  try {
+    validateNegotiationPayload(serviceId, negotiation, config);
   } catch (error) {
     await adapter.rejectNegotiation(negotiationId, asError(error).message);
+    return;
   }
+
+  await adapter.acceptNegotiation(negotiationId);
+  logger.info(`Accepted CROO negotiation ${negotiationId} for service ${serviceId}`);
 }
 
 async function handleOrderPaid(
